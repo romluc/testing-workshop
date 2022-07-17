@@ -8,9 +8,11 @@ Find a full list of assertions here: https://facebook.github.io/jest/docs/en/exp
 
 test('toBe', () => {
   // similar to ===
+  const obj = {}
   expect(1).toBe(1)
   expect(true).toBe(true)
   expect({}).not.toBe({})
+  expect(obj).toBe(obj)
 })
 
 test('toEqual', () => {
@@ -61,8 +63,13 @@ test('toBeFalsy/Truthy', () => {
   expect(true).toBeTruthy()
   expect(null).toBeFalsy()
   expect(undefined).toBeFalsy()
+  expect([]).toBeTruthy()
+  expect({}).toBeTruthy()
   expect(1).toBeTruthy()
   expect(0).toBeFalsy()
+  expect('').toBeFalsy()
+  expect(' ').toBeTruthy()
+  expect('a').toBeTruthy()
 })
 
 test('toEqual, toMatchObject, and toHaveBeenCalledWith matching a schema', () => {
@@ -70,13 +77,16 @@ test('toEqual, toMatchObject, and toHaveBeenCalledWith matching a schema', () =>
     day: 18,
     month: 10,
     year: 1988,
-    meta: {display: 'Oct 18th, 1988'},
+    meta: {display: 'Oct 18th, 1988', numbers: [1, 2, 3]},
   }
   const schema = {
     day: expect.any(Number),
     month: expect.any(Number),
     year: expect.any(Number),
-    meta: {display: expect.stringContaining('1988')},
+    meta: {
+      display: expect.stringContaining('1988'),
+      numbers: expect.arrayContaining([1]),
+    },
     // there's also expect.arrayContaining, or expect.objectContaining
   }
   expect(birthday).toEqual(schema)
@@ -85,16 +95,20 @@ test('toEqual, toMatchObject, and toHaveBeenCalledWith matching a schema', () =>
 test('mock functions', () => {
   const myFn = jest.fn()
   myFn('first', {second: 'val'})
+  myFn('second call', {second: 'val'})
 
   const calls = myFn.mock.calls
   const firstCall = calls[0]
   const firstArg = firstCall[0]
   const secondArg = firstCall[1]
+
   // could also do this on a single line
   // const [[firstArg, secondArg]] = myFn.mock.calls
 
   expect(firstArg).toBe('first')
   expect(secondArg).toEqual({second: 'val'})
+
+  expect(myFn).toHaveBeenCalledWith('second call', {second: 'val'})
 })
 
 // there are other ways to make mock functions/spies
@@ -118,7 +132,6 @@ Snapshot tests below. We'll cover these later
 
 
  */
-
 test('manual "snapshot"', () => {
   const flyingHeros = getFlyingSuperHeros()
   expect(flyingHeros).toEqual([
@@ -141,18 +154,21 @@ test('snapshot examples', () => {
     someFunction: () => {},
     symbol: Symbol('symbol description'),
     set: new Set([1, 2, 3]),
-    map: new Map([[{}, []], [[], {}]]),
+    map: new Map([
+      [{}, []],
+      [[], {}],
+    ]),
     // and more!
   }
   expect(object).toMatchSnapshot()
 
   // AND DOM NODES!!!
-  const div = document.createElement('div')
-  const title = '<h2 class="title">Super Heros are great!</h2>'
-  const content =
-    '<p class="content">We can each be a super hero for someone</p>'
-  div.innerHTML = `<section>${title}${content}</section>`
-  expect(div).toMatchSnapshot('title of a snapshot!')
+  // const div = document.createElement('div')
+  // const title = '<h2 class="title">Super Heros are great!</h2>'
+  // const content =
+  //   '<p class="content">We can each be a super hero for someone</p>'
+  // div.innerHTML = `<section>${title}${content}</section>`
+  // expect(div).toMatchSnapshot('title of a snapshot!')
 
   // And react elements!
   const onClick = () => {}
@@ -164,7 +180,7 @@ test('snapshot examples', () => {
   expect(rendered).toMatchSnapshot('rendered')
 
   // and DOM nodes rendered via react
-  const app = document.createElement('div')
-  ReactDOM.render(element, app)
-  expect(app).toMatchSnapshot('react-dom')
+  // const app = document.createElement('div')
+  // ReactDOM.render(element, app)
+  // expect(app).toMatchSnapshot('react-dom')
 })
